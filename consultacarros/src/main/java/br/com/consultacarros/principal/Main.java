@@ -1,9 +1,10 @@
 package br.com.consultacarros.principal;
 
-import br.com.consultacarros.model.Marcas;
+import br.com.consultacarros.model.*;
 import br.com.consultacarros.services.ConsumoApi;
 import br.com.consultacarros.services.ConverteDadosImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,10 +33,10 @@ public class Main {
                 default -> "Opção inválida";
             };
 
-            var json = consumoApi.obterDados(ENDERECO + veiculo + "/marcas");
+            var json = consumoApi.obterDadosRequisicao(ENDERECO + veiculo + "/marcas");
             System.out.println(json);
             try {
-                List<Marcas> marcasList = converteDados.obterDados(json, new TypeReference<List<Marcas>>(){});
+                List<Marcas> marcasList = converteDados.converterDados(json, new TypeReference<List<Marcas>>(){});
 
                 System.out.println("Exibindo lista de carros.");
                 Map<String, String> mapaMarcas = marcasList.stream()
@@ -45,12 +46,33 @@ public class Main {
                 System.out.println("Por favor selecione uma marca pelo seu respectivo código: ");
                 opcao = teclado.nextLine();
 
-                json = consumoApi.obterDados(ENDERECO + veiculo + "/marcas/"
+                json = consumoApi.obterDadosRequisicao(ENDERECO + veiculo + "/marcas/"
                         + opcao + "/modelos");
 
                 System.out.println(json);
 
+                    ObjectMapper mapper = new ObjectMapper();
 
+                Resultado resultado = mapper.readValue(json, new TypeReference<Resultado>(){});
+                List<DadosModelos> listModelos = resultado.modelosList();
+                List<Anos> listAnos = resultado.anosList();
+
+
+                System.out.println("Por favor digite um trecho do veiculo procurado: ");
+                var modeloProcurado = teclado.nextLine();
+
+                List<Modelo> modelos = listModelos.stream()
+                        .map(lm -> new Modelo(lm))
+                        .filter(m -> m.getModelo().toLowerCase().contains(modeloProcurado.toLowerCase()))
+                        .collect(Collectors.toList());
+                modelos.forEach(System.out::println);
+
+
+
+//                List<Modelo> modelosFiltrados = modelos.stream()
+//                        .filter(mf -> mf.getModelo().equalsIgnoreCase(modeloProcurado))
+//                        .collect(Collectors.toList());
+//                modelosFiltrados.forEach(mf -> System.out.println("Modelo filtrado " + mf.getModelo()));
 
 
             } catch (Exception e ) {
