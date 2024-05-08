@@ -15,10 +15,9 @@ public class ConsultacarrosApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		Main main = new Main();
-//		for (int i = 0; i < 3; i++) {
-//			main.exibeMenu();
-//		}
-		main.exibeMenu();
+		for (int i = 0; i < 3; i++) {
+			main.exibeMenu();
+		}
 
 	}
 }

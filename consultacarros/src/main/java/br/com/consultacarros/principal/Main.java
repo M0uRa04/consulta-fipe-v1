@@ -34,11 +34,11 @@ public class Main {
             };
 
             var json = consumoApi.obterDadosRequisicao(ENDERECO + veiculo + "/marcas");
-            System.out.println(json);
+
             try {
                 List<Marcas> marcasList = converteDados.converterDados(json, new TypeReference<List<Marcas>>(){});
 
-                System.out.println("Exibindo lista de carros.");
+                System.out.println("Exibindo lista de veículo: ");
                 Map<String, String> mapaMarcas = marcasList.stream()
                         .collect(Collectors.toMap(Marcas::codigoMarca, Marcas::nome));
                 mapaMarcas.forEach((codigo, nome) -> System.out.println("Codigo: " + codigo + " " + "Marca: " + nome));
@@ -49,36 +49,50 @@ public class Main {
                 json = consumoApi.obterDadosRequisicao(ENDERECO + veiculo + "/marcas/"
                         + opcao + "/modelos");
 
-                System.out.println(json);
-
-                    ObjectMapper mapper = new ObjectMapper();
+                ObjectMapper mapper = new ObjectMapper();
 
                 Resultado resultado = mapper.readValue(json, new TypeReference<Resultado>(){});
                 List<DadosModelos> listModelos = resultado.modelosList();
-                List<Anos> listAnos = resultado.anosList();
+                List<Ano> listAnos = resultado.anosList();
 
 
                 System.out.println("Por favor digite um trecho do veiculo procurado: ");
                 var modeloProcurado = teclado.nextLine();
 
-                List<Modelo> modelos = listModelos.stream()
+                List<Modelo> modelosFiltrados = listModelos.stream()
                         .map(lm -> new Modelo(lm))
                         .filter(m -> m.getModelo().toLowerCase().contains(modeloProcurado.toLowerCase()))
                         .collect(Collectors.toList());
-                modelos.forEach(System.out::println);
+                modelosFiltrados.forEach(System.out::println);
 
 
+                List<Veiculo> veiculoList = new ArrayList<>();
+                System.out.println("Por favor digite o codigo do veiculo em questão: ");
+                var codigoModeloProcurado = teclado.nextLine();
 
-//                List<Modelo> modelosFiltrados = modelos.stream()
-//                        .filter(mf -> mf.getModelo().equalsIgnoreCase(modeloProcurado))
-//                        .collect(Collectors.toList());
-//                modelosFiltrados.forEach(mf -> System.out.println("Modelo filtrado " + mf.getModelo()));
+
+                json = consumoApi.obterDadosRequisicao(ENDERECO + veiculo + "/marcas/"
+                        + opcao + "/modelos/" + codigoModeloProcurado + "/anos");
+
+                listAnos.clear();
+
+                listAnos = converteDados.converterDados(json, new TypeReference<List<Ano>>(){});
+
+                List<String> anosProcurados = listAnos.stream()
+                        .map(Ano::codigoAno)
+                        .collect(Collectors.toList());
+
+                for (int i = 0; i < anosProcurados.size(); i++) {
+                    json = consumoApi.obterDadosRequisicao(ENDERECO + veiculo + "/marcas/"
+                            + opcao + "/modelos/" + codigoModeloProcurado + "/anos/" + anosProcurados.get(i));
+                    veiculoList.add(mapper.readValue(json, Veiculo.class));
+                }
+                veiculoList.forEach(System.out::println);
 
 
             } catch (Exception e ) {
                 System.out.println(e.getMessage());
             }
-
 
         }catch (IllegalArgumentException e ) {
             System.out.println(e.getMessage());
